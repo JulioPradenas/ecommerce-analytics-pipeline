@@ -1,0 +1,46 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Entornos virtuales
+venv/
+.venv/
+env/
+.env
+
+# Credenciales y secretos — NUNCA subir al repo
+*.json.key
+service-account*.json
+credentials*.json
+.env.local
+.env.production
+
+# Logs generados por el pipeline
+*.log
+01_extraction/extractor.log
+01_extraction/loader.log
+
+# Outputs generados (se regeneran ejecutando el pipeline)
+01_extraction/raw_data/
+01_extraction/load_metadata.json
+02_tagging_simulation/gtm_events_raw.json
+02_tagging_simulation/gtm_funnel_summary.csv
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# macOS
+.DS_Store
+.AppleDouble
+
+# IDEs
+.vscode/
+.idea/
+*.swp

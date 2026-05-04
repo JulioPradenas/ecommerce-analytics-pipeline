@@ -1,0 +1,79 @@
+# ══════════════════════════════════════════════════════════════════
+# requirements.txt — E-Commerce Analytics Pipeline
+# ══════════════════════════════════════════════════════════════════
+#
+# ¿Qué es este archivo?
+# Lista de dependencias Python del proyecto. Permite instalar todo
+# el entorno de una sola vez con:
+#   pip install -r requirements.txt
+#
+# ¿Por qué versionamos las dependencias?
+# Para garantizar que el proyecto funcione igual en cualquier máquina
+# o entorno (tu laptop, el servidor de producción, la máquina de otro
+# desarrollador). Sin versiones fijas, una actualización de librería
+# podría romper el código silenciosamente.
+# ══════════════════════════════════════════════════════════════════
+
+# ── Google Cloud ───────────────────────────────────────────────────
+google-analytics-data==0.18.3
+# SDK oficial GA4 Data API. Permite consultar métricas y dimensiones
+# de propiedades GA4 programáticamente. Usado en: ga4_extractor.py
+
+google-cloud-bigquery==3.13.0
+# SDK oficial BigQuery. Permite crear datasets, tablas, cargar datos
+# y ejecutar SQL desde Python. Usado en: bq_loader.py y módulos 3, 4.
+
+google-cloud-bigquery-storage==2.24.0
+# Extensión de BigQuery para descarga de datos a alta velocidad
+# usando el Storage Read API. Necesario para leer tablas grandes
+# eficientemente en los módulos de análisis.
+
+pyarrow==14.0.1
+# Motor de serialización columnar. Usado internamente por BigQuery
+# para convertir DataFrames a formato Parquet antes de cargar.
+# Sin esto, load_table_from_dataframe() no funciona.
+
+# ── Manipulación de datos ──────────────────────────────────────────
+pandas==2.1.4
+# Librería central de análisis de datos. DataFrames, transformaciones,
+# agregaciones, limpieza. Usada en absolutamente todos los módulos.
+
+numpy==1.26.2
+# Cómputo numérico de alto rendimiento. Base de pandas.
+# Usada directamente en cálculos estadísticos del Módulo 4.
+
+# ── Calidad de datos ───────────────────────────────────────────────
+great-expectations==0.18.8
+# Framework de validación de datos. Permite definir "expectativas"
+# (reglas de calidad) y generar reportes HTML automáticos.
+# Usado en: 03_qa/data_quality_checks.py
+
+# ── Visualización ──────────────────────────────────────────────────
+plotly==5.18.0
+# Librería de visualización interactiva. Gráficos de funnel, barras,
+# líneas de tiempo. Los gráficos se exportan como HTML interactivo.
+# Usado en: 04_funnel_analysis/
+
+matplotlib==3.8.2
+# Visualización estática. Para gráficos simples en el reporte de QA
+# y documentación. Usado en: 03_qa/ y docs/
+
+# ── Simulación y generación de datos ──────────────────────────────
+faker==21.0.0
+# Generador de datos falsos pero realistas (nombres, emails, IPs).
+# Usado en: 02_tagging_simulation/ para simular eventos GTM
+# sin exponer datos reales de usuarios.
+
+# ── Utilidades ────────────────────────────────────────────────────
+python-dotenv==1.0.0
+# Carga variables de entorno desde un archivo .env
+# Permite guardar PROJECT_ID, credenciales, etc. fuera del código.
+# Nunca se sube el .env a GitHub (está en .gitignore).
+
+requests==2.31.0
+# HTTP client. Usado en el Módulo 2 para simular llamadas de GTM
+# y en utilidades de validación.
+
+tqdm==4.66.1
+# Barras de progreso en terminal. Útil cuando se procesan
+# muchos registros o se hacen múltiples llamadas a la API.

@@ -1,0 +1,128 @@
+{
+  "tracking_plan_version": "1.0.0",
+  "proyecto": "E-Commerce Analytics Pipeline",
+  "propiedad_ga4": "213025502",
+  "descripcion": "Especificación de eventos GTM para funnel de conversión e-commerce",
+
+  "convenciones": {
+    "nombres_eventos": "snake_case en minúsculas (estándar GA4)",
+    "parametros_obligatorios": ["event_name", "timestamp_ms", "session_id", "user_pseudo_id"],
+    "moneda": "USD",
+    "nota": "Todos los eventos deben dispararse DESPUÉS de que el DOM esté listo"
+  },
+
+  "eventos": [
+    {
+      "event_name": "session_start",
+      "descripcion": "Se dispara cuando el usuario inicia una nueva sesión en el sitio",
+      "trigger_gtm": "Page View — All Pages (primera página de la sesión)",
+      "cuando_disparar": "Primera página visitada en una sesión nueva",
+      "parametros": {
+        "session_id":      { "tipo": "string",  "obligatorio": true,  "ejemplo": "abc123xyz",        "fuente": "cookie _ga" },
+        "user_pseudo_id":  { "tipo": "string",  "obligatorio": true,  "ejemplo": "user_9f3a2b",      "fuente": "cookie _ga" },
+        "traffic_source":  { "tipo": "string",  "obligatorio": false, "ejemplo": "Organic Search",   "fuente": "sessionDefaultChannelGroup" },
+        "device_category": { "tipo": "string",  "obligatorio": true,  "ejemplo": "mobile",           "fuente": "navigator.userAgent" },
+        "landing_page":    { "tipo": "string",  "obligatorio": false, "ejemplo": "/sale",            "fuente": "document.location.pathname" },
+        "timestamp_ms":    { "tipo": "integer", "obligatorio": true,  "ejemplo": 1705312800000,      "fuente": "Date.now()" }
+      },
+      "qa_checks": [
+        "session_id no debe ser null ni vacío",
+        "timestamp_ms debe ser mayor que 0",
+        "device_category debe ser uno de: desktop, mobile, tablet"
+      ]
+    },
+    {
+      "event_name": "view_item",
+      "descripcion": "Usuario visualiza la página de detalle de un producto",
+      "trigger_gtm": "Page View — URL contiene /product/",
+      "cuando_disparar": "Al cargar cualquier página de producto",
+      "parametros": {
+        "session_id":      { "tipo": "string",  "obligatorio": true },
+        "user_pseudo_id":  { "tipo": "string",  "obligatorio": true },
+        "item_id":         { "tipo": "string",  "obligatorio": true,  "ejemplo": "GGOEGOAQ012899", "fuente": "dataLayer.ecommerce.items[0].item_id" },
+        "item_name":       { "tipo": "string",  "obligatorio": true,  "ejemplo": "Google Sunglasses", "fuente": "dataLayer.ecommerce.items[0].item_name" },
+        "item_category":   { "tipo": "string",  "obligatorio": false, "ejemplo": "Apparel",         "fuente": "dataLayer.ecommerce.items[0].item_category" },
+        "price":           { "tipo": "float",   "obligatorio": true,  "ejemplo": 19.99,             "fuente": "dataLayer.ecommerce.items[0].price" },
+        "currency":        { "tipo": "string",  "obligatorio": true,  "ejemplo": "USD",             "fuente": "hardcoded" },
+        "device_category": { "tipo": "string",  "obligatorio": true },
+        "timestamp_ms":    { "tipo": "integer", "obligatorio": true }
+      },
+      "qa_checks": [
+        "price debe ser mayor que 0",
+        "currency debe ser USD",
+        "item_id no debe ser null ni vacío",
+        "timestamp_ms debe ser >= timestamp_ms de session_start en la misma sesión"
+      ]
+    },
+    {
+      "event_name": "add_to_cart",
+      "descripcion": "Usuario agrega un producto al carrito de compras",
+      "trigger_gtm": "Custom Event — event igual a 'add_to_cart' en dataLayer",
+      "cuando_disparar": "Click en botón 'Add to Cart' — disparado por JavaScript del sitio",
+      "nota_implementacion": "El equipo de desarrollo debe pushear al dataLayer: window.dataLayer.push({event: 'add_to_cart', ecommerce: {...}})",
+      "parametros": {
+        "session_id":      { "tipo": "string",  "obligatorio": true },
+        "user_pseudo_id":  { "tipo": "string",  "obligatorio": true },
+        "item_id":         { "tipo": "string",  "obligatorio": true },
+        "item_name":       { "tipo": "string",  "obligatorio": true },
+        "item_category":   { "tipo": "string",  "obligatorio": false },
+        "price":           { "tipo": "float",   "obligatorio": true },
+        "quantity":        { "tipo": "integer", "obligatorio": true,  "ejemplo": 1 },
+        "currency":        { "tipo": "string",  "obligatorio": true },
+        "device_category": { "tipo": "string",  "obligatorio": true },
+        "timestamp_ms":    { "tipo": "integer", "obligatorio": true }
+      },
+      "qa_checks": [
+        "quantity debe ser >= 1",
+        "price debe ser mayor que 0",
+        "timestamp_ms de add_to_cart debe ser >= timestamp_ms de view_item del mismo item"
+      ]
+    },
+    {
+      "event_name": "begin_checkout",
+      "descripcion": "Usuario inicia el proceso de checkout",
+      "trigger_gtm": "Page View — URL contiene /checkout o Custom Event 'begin_checkout'",
+      "cuando_disparar": "Al cargar la página de checkout o al hacer click en 'Proceed to Checkout'",
+      "parametros": {
+        "session_id":        { "tipo": "string",  "obligatorio": true },
+        "user_pseudo_id":    { "tipo": "string",  "obligatorio": true },
+        "cart_value":        { "tipo": "float",   "obligatorio": true,  "ejemplo": 59.97, "fuente": "suma de price*quantity de todos los items en carrito" },
+        "cart_items_count":  { "tipo": "integer", "obligatorio": true,  "ejemplo": 3 },
+        "currency":          { "tipo": "string",  "obligatorio": true },
+        "device_category":   { "tipo": "string",  "obligatorio": true },
+        "timestamp_ms":      { "tipo": "integer", "obligatorio": true }
+      },
+      "qa_checks": [
+        "cart_value debe ser mayor que 0",
+        "cart_items_count debe ser >= 1",
+        "debe existir al menos un add_to_cart previo en la misma sesión"
+      ]
+    },
+    {
+      "event_name": "purchase",
+      "descripcion": "Transacción completada exitosamente",
+      "trigger_gtm": "Page View — URL contiene /order-confirmation o Custom Event 'purchase'",
+      "cuando_disparar": "Página de confirmación de orden — SOLO UNA VEZ por transaction_id",
+      "nota_critica": "Implementar deduplicación por transaction_id para evitar doble conteo",
+      "parametros": {
+        "session_id":       { "tipo": "string",  "obligatorio": true },
+        "user_pseudo_id":   { "tipo": "string",  "obligatorio": true },
+        "transaction_id":   { "tipo": "string",  "obligatorio": true,  "ejemplo": "T-20240115-001" },
+        "revenue":          { "tipo": "float",   "obligatorio": true,  "ejemplo": 72.37, "fuente": "cart_value + shipping + tax" },
+        "cart_value":       { "tipo": "float",   "obligatorio": true,  "ejemplo": 59.97, "fuente": "suma de price*quantity" },
+        "tax":              { "tipo": "float",   "obligatorio": false, "ejemplo": 5.40 },
+        "shipping":         { "tipo": "float",   "obligatorio": false, "ejemplo": 7.00 },
+        "currency":         { "tipo": "string",  "obligatorio": true },
+        "payment_method":   { "tipo": "string",  "obligatorio": false, "ejemplo": "credit_card" },
+        "device_category":  { "tipo": "string",  "obligatorio": true },
+        "timestamp_ms":     { "tipo": "integer", "obligatorio": true }
+      },
+      "qa_checks": [
+        "transaction_id debe ser único — no puede repetirse en el dataset",
+        "revenue debe ser mayor que 0",
+        "revenue debe ser igual a cart_value + shipping + tax",
+        "debe existir begin_checkout previo en la misma sesión"
+      ]
+    }
+  ]
+}
